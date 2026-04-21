@@ -23,8 +23,13 @@ Quantization means take all the values and converting them all in "lighter" valu
 Doing that, you can free a lot of memory and the model could run on smaller device too.
 (i. e. [float32 -> int8]: 75% memory saved)
 
-# PCQ
+# tf_flowers
 
-1) Pruning
-2) While the model does still have his binary masks simulate the 8 bit low precision during training (fitting)
-3) Export final model
+https://www.tensorflow.org/datasets/catalog/tf_flowers?hl=it
+
+
+
+FeaturesDict({
+    'image': Image(shape=(None, None, 3), dtype=uint8),
+    'label': ClassLabel(shape=(), dtype=int64, num_classes=5),
+})

@@ -1,22 +1,13 @@
 import tensorflow_datasets as tfds
 import tensorflow as tf
-
-#import data from tensorflow_datasets for model fitting
-(train_ds, test_ds), info = tfds.load(
-                                        'tf_flowers', 
-                                        split=['train[:80%]', 'train[80%:]'],
-                                        with_info=True, 
-                                        as_supervised=True
-                                    )
-
-'''
-or
-import tensorflow as tf
-import os
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+import pathlib
 
 dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-data_dir = tf.keras.utils.get_file('flower_photos', origin=dataset_url, untar=True) #extract the compressed file into a directory and returns the dir name
-data_dir = os.path.join(os.path.dirname(data_dir), 'flower_photos') #enter the directory in order to use image_dataset_from_directory
+data_dir = tf.keras.utils.get_file(origin=dataset_url,
+                                   fname='flower_photos',
+                                   untar=True)
+data_dir = pathlib.Path(data_dir)
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
     data_dir,
@@ -35,19 +26,17 @@ val_ds = tf.keras.utils.image_dataset_from_directory(
     image_size=(224, 224),
     batch_size=32
 )
-'''
 
-def prepare_data(image, label):
-    # MobileNetV2 needs 244x244 images with pixels between -1 and 1 (or 0 and 1)
-    image = tf.image.resize(image, (244, 244))
-    image = tf.cast(image, tf.float32) / 255.0
-    return image, label
+def preprocess(images, labels):
+    #use preprocess_input function from keras.application.MobileNetV2
+    #the model expects values between -1 and 1
+    images = preprocess_input(images)
+    return images, labels
 
-train_ds = train_ds.map(prepare_data).batch(32)
-test_ds = test_ds.map(prepare_data).batch(32)
+train_ds = train_ds.map(preprocess)
+val_ds = val_ds.map(preprocess)
 
-for (image_batch, label_batch) in train_ds.take(1):
-    print("image_shape: ", image_batch.shape)
-    print("batch_label: ", label_batch.numpy())
-    break
+AUTOTUNE = tf.data.AUTOTUNE
 
+train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
+val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)

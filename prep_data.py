@@ -7,7 +7,7 @@ dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_im
 data_dir = tf.keras.utils.get_file(origin=dataset_url,
                                    fname='flower_photos',
                                    untar=True)
-data_dir = pathlib.Path(data_dir)
+data_dir = pathlib.Path(data_dir + r'\flower_photos')
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
     data_dir,
@@ -40,3 +40,23 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+
+card = tf.data.experimental.cardinality(val_ds)
+
+val_ds = val_ds.take(card // 2) #doing this I'm giving val_ds the dataset between 80% and 90%
+test_ds = val_ds.take(card // 2) #and I'm giving test_ds the dataset between 90% and 100%
+
+roses = list(data_dir.glob('roses/*.jpg'))
+print(len(roses))
+
+daisy = list(data_dir.glob('daisy/*.jpg'))
+print(len(daisy))
+
+dandelion = list(data_dir.glob('dandelion/*.jpg'))
+print(len(dandelion))
+
+sunflowers = list(data_dir.glob('sunflowers/*.jpg'))
+print(len(sunflowers))
+
+tulips = list(data_dir.glob('tulips/*.jpg'))
+print(len(tulips))

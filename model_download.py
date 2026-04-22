@@ -3,10 +3,10 @@ import tensorflow as tf
 
 model = MobileNetV2()
 
-#compiling (this loss and optimizer are suggested in the dataset url)
+#compiling
 model.compile(
   optimizer='adam',
-  loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
+  loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
   metrics=['accuracy'])
 
 print(model.summary(expand_nested=True, show_trainable=True))

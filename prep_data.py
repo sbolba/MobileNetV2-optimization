@@ -18,6 +18,8 @@ train_ds = tf.keras.utils.image_dataset_from_directory(
     batch_size=32
 )
 
+class_names = train_ds.class_names
+
 val_ds = tf.keras.utils.image_dataset_from_directory(
     data_dir,
     validation_split=0.2,
@@ -36,27 +38,28 @@ def preprocess(images, labels):
 train_ds = train_ds.map(preprocess)
 val_ds = val_ds.map(preprocess)
 
-AUTOTUNE = tf.data.AUTOTUNE
-
-train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
-
 card = tf.data.experimental.cardinality(val_ds)
 
-val_ds = val_ds.take(card // 2) #doing this I'm giving val_ds the dataset between 80% and 90%
-test_ds = val_ds.take(card // 2) #and I'm giving test_ds the dataset between 90% and 100%
+val_ds_full = val_ds  # save it for later, we will split it into val_ds and test_ds
+
+val_ds = val_ds_full.take(card // 2)          # 80-90%
+test_ds = val_ds_full.skip(card // 2)          # 90-100%
+
+#cache and prefetch for better performance
+#train_ds and train_ds get consumed each epoch, so if we repeat them they will be always available
+#I add it on test_ds for consistency, but it won't make a difference because we only evaluate once on it
+AUTOTUNE = tf.data.AUTOTUNE
+train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat()
+val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat() 
+test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat()
+
 
 roses = list(data_dir.glob('roses/*.jpg'))
-print(len(roses))
 
 daisy = list(data_dir.glob('daisy/*.jpg'))
-print(len(daisy))
 
 dandelion = list(data_dir.glob('dandelion/*.jpg'))
-print(len(dandelion))
 
 sunflowers = list(data_dir.glob('sunflowers/*.jpg'))
-print(len(sunflowers))
 
 tulips = list(data_dir.glob('tulips/*.jpg'))
-print(len(tulips))

@@ -1,11 +1,10 @@
 #Python
 __pycache__/
-venv/
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
 *.py[codz]
 *$py.class
+
+#OpenCode
+AGENTS.md
 
 # C extensions
 *.so
@@ -209,7 +208,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-=======
-#Python
-__pycache__/
-venv/

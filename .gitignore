@@ -6,6 +6,9 @@ __pycache__/
 #OpenCode
 AGENTS.md
 
+#Models
+models/
+
 # C extensions
 *.so
 

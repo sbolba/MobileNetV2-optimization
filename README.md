@@ -4,9 +4,12 @@ This project optimizes MobileNetV2 for inference on smaller devices using prunin
 
 The goal is to keep strong image-classification performance while reducing model size and improving deployment efficiency on resource-constrained hardware.
 
+The goal of this project is to see the differences between the only fitted model and the optimized model.
+
 ## Method
 
 **Pruning** removes weights near zero via a binary mask. Structured pruning is used for efficient sparse-matrix operations on mobile processors. Pruning is applied before quantization to maximize compression.
+(prune_magnitude_low (with pruning_settings) -> compile -> fit (with UpdatePruningSteps() as callback) -> strip_pruning)
 
 **Quantization** reduces weight precision (e.g., float32 → int8), cutting memory usage by ~75% while preserving accuracy.
 
@@ -32,7 +35,7 @@ Run scripts in this order:
 3. `python prefitting.py`
 4. `python test_model.py`
 
-`test_model.py` loads `MobileNetV2_fitted.keras`, preprocesses a sample image from the dataset, and prints predicted class plus confidence.
+`test_model.py` loads `MobileNetV2_fitted.h5`, preprocesses a sample image from the dataset, and prints predicted class plus confidence.
 
 ## Usage
 
@@ -40,14 +43,11 @@ Run scripts in this order:
 python model_download.py   # Download and compile base model
 python prep_data.py      # Prepare dataset
 python prefitting.py    # Fine-tune and evaluate
-python test_model.py    # Run single-image inference sanity check
+python test_model.py    # Optional, run single-image inference sanity check
 ```
 
-## Setup
-
-```bash
-pip install tensorflow tensorflow-datasets numpy
-```
+**Note:**
+Pruning with `tensorflow-model-optimization` is not compatible with Keras 3. If you need pruning, use a separate legacy TF 2.13 environment and generate the base and fitted models in that same environment before running pruning.
 
 Optional (recommended): use a virtual environment before installing dependencies.
 
@@ -67,9 +67,9 @@ Optional (recommended): use a virtual environment before installing dependencies
 *Base Model*
 | Metric | Value |
 |--------|-------|
-| Test accuracy | 92.15% |
-| Model size | 19.02 MB |
-| Latency | 0.07 s |
+| Test accuracy | 91.88% |
+| Model size | 18.98 MB |
+| Latency | 0.06 s |
 
 *Optimized Model*
 | Metric | Value |
@@ -79,7 +79,21 @@ Optional (recommended): use a virtual environment before installing dependencies
 | Latency | — |
 
 ## Requirements
-
+**Only fitted model**
 - TensorFlow
 - TensorFlow Datasets
 - NumPy
+```bash
+pip install tensorflow tensorflow-datasets numpy
+```
+
+**Fitted model + pruning + quantization**
+- Python 3.8-3.11 (64-bit)
+- TensorFlow 2.13
+- tensorflow_model_optimization
+- protobuf<4.21
+- Tensorflow Datasets
+- NumPy
+```bash
+pip install "tensorflow==2.13.*" "tensorflow-model-optimization==0.7.5" "protobuf<4.21" tensorflow-datasets numpy
+```

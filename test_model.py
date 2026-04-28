@@ -3,6 +3,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import tensorflow as tf
 import numpy as np
+import PIL
 
 def process_image(img_path):
     img = tf.keras.utils.load_img(img_path, target_size=(224, 224)) 
@@ -11,7 +12,7 @@ def process_image(img_path):
     img_array = tf.expand_dims(img_array, axis=0) # add batch dimension: (1, 224, 224, 3)
     return img_array
 
-model = load_model('models/MobileNetV2_fitted.keras')
+model = load_model("models/MobileNetV2_fitted.h5")
 
 # you can choose whatever image you want
 sunflowers_image = sunflowers[0]

@@ -1,8 +1,8 @@
-from keras.applications import MobileNetV2
-from keras.models import Model
-from keras.layers import Dense, GlobalAveragePooling2D
-from keras.optimizers import Adam
 import tensorflow as tf
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+
 
 #I need a base model, I chose MobileNetV2
 base = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
@@ -21,11 +21,11 @@ for layer in base.layers:
 
 #compiling
 model.compile(
-  optimizer=Adam(1e-3),
-  loss=tf.losses.SparseCategoricalCrossentropy(), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
+  optimizer='adam',
+  loss=tf.keras.losses.SparseCategoricalCrossentropy(), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
   metrics=['accuracy']
 )
 
 print(model.summary(expand_nested=True, show_trainable=True))
 
-model.save('models/MobileNetV2.keras')
+model.save("models/MobileNetV2.h5") #saving in h5 format for consistent IO across scripts

@@ -1,17 +1,15 @@
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 from prep_data import train_ds, val_ds, test_ds
-from tensorflow.keras.optimizers import Adam
 import time
 import numpy as np
 import os
 import math
 
-model = load_model('models/MobileNetV2.keras') #this will throw a warning because the Adam optimizer is not saved with the model, but we will recompile it later so it's not a problem
+model = tf.keras.models.load_model("models/MobileNetV2.h5")
 
 model.compile(
-    optimizer=Adam(1e-3),
-    loss=tf.losses.SparseCategoricalCrossentropy(),
+    optimizer=tf.keras.optimizers.Adam(1e-3),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
     metrics=['accuracy']
 )
 
@@ -32,8 +30,8 @@ for layer in model.layers[-20:]:
     layer.trainable = True #unfreezing last 20 layers
 
 model.compile(
-  optimizer=Adam(1e-5),
-  loss=tf.losses.SparseCategoricalCrossentropy(), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
+    optimizer=tf.keras.optimizers.Adam(1e-5),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(), #use this loss because we have 5 sets: ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
   metrics=['accuracy']
 )
 
@@ -48,10 +46,10 @@ model.fit(
 results = model.evaluate(test_ds, steps=test_steps)
 print(f"Results: final loss {results[0]} | final accuracy {results[1]}")
 
-model.save('models/MobileNetV2_fitted.keras')
+model.save("models/MobileNetV2_fitted.h5")
 
 # Size calculation
-model_size = os.path.getsize('models/MobileNetV2_fitted.keras') / (1024 * 1024) # size in MB
+model_size = os.path.getsize("models/MobileNetV2_fitted.h5") / (1024 * 1024) # size in MB
 print(f"Model size: {model_size:.2f} MB")
 
 # Latency calculation

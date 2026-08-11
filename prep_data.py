@@ -1,65 +1,93 @@
-import tensorflow_datasets as tfds
+import pathlib
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-import pathlib
 
-dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-data_dir = tf.keras.utils.get_file(origin=dataset_url,
-                                   fname='flower_photos',
-                                   untar=True)
-data_dir = pathlib.Path(data_dir + r'\flower_photos')
 
-train_ds = tf.keras.utils.image_dataset_from_directory(
-    data_dir,
-    validation_split=0.2,
-    subset="training",
-    seed=123,
-    image_size=(224, 224),
-    batch_size=32
+# Configuration
+DATASET_URL = (
+    "https://storage.googleapis.com/download.tensorflow.org/"
+    "example_images/flower_photos.tgz"
 )
 
-class_names = train_ds.class_names
+IMAGE_SIZE = (224, 224)
+BATCH_SIZE = 32
+SEED = 123
 
-val_ds = tf.keras.utils.image_dataset_from_directory(
-    data_dir,
-    validation_split=0.2,
-    subset="validation",
-    seed=123,
-    image_size=(224, 224),
-    batch_size=32
+TRAIN_SPLIT = 0.80
+VAL_SPLIT = 0.10
+TEST_SPLIT = 0.10
+
+# Dataset download
+data_dir = tf.keras.utils.get_file( # Save them in C/Users/USER/.keras/datasets/
+    origin=DATASET_URL,
+    fname="flower_photos",
+    untar=True
 )
 
+data_dir = pathlib.Path(data_dir) / "flower_photos"
+
+
+# Load the complete dataset
+full_dataset = tf.keras.utils.image_dataset_from_directory(
+    data_dir,
+    image_size=IMAGE_SIZE,
+    batch_size=None,
+    shuffle=True,
+    seed=SEED
+)
+
+class_names = full_dataset.class_names
+
+print("\nClasses:")
+for index, class_name in enumerate(class_names):
+    print(f"  {index}: {class_name}")
+
+dataset_size = tf.data.experimental.cardinality(full_dataset).numpy()
+print(f"\nTotal images: {dataset_size}")
+
+# Split sizes
+train_size = int(dataset_size * TRAIN_SPLIT)
+val_size = int(dataset_size * VAL_SPLIT)
+test_size = dataset_size - train_size - val_size
+
+print(f"Train images: {train_size}")
+print(f"Validation images: {val_size}")
+print(f"Test images: {test_size}")
+
+# Split dataset
+train_ds = full_dataset.take(train_size)
+remaining_ds = full_dataset.skip(train_size)
+val_ds = remaining_ds.take(val_size)
+test_ds = remaining_ds.skip(val_size)
+
+# MobileNetV2 preprocessing
 def preprocess(images, labels):
-    #use preprocess_input function from keras.application.MobileNetV2
-    #the model expects values between -1 and 1
+    images = tf.cast(images, tf.float32)
     images = preprocess_input(images)
     return images, labels
 
-train_ds = train_ds.map(preprocess)
-val_ds = val_ds.map(preprocess)
 
-card = tf.data.experimental.cardinality(val_ds)
+train_ds = train_ds.map(
+    preprocess,
+    num_parallel_calls=tf.data.AUTOTUNE
+)
 
-val_ds_full = val_ds  # save it for later, we will split it into val_ds and test_ds
+val_ds = val_ds.map(
+    preprocess,
+    num_parallel_calls=tf.data.AUTOTUNE
+)
 
-val_ds = val_ds_full.take(card // 2)          # 80-90%
-test_ds = val_ds_full.skip(card // 2)          # 90-100%
+test_ds = test_ds.map(
+    preprocess,
+    num_parallel_calls=tf.data.AUTOTUNE
+)
 
-#cache and prefetch for better performance
-#train_ds and train_ds get consumed each epoch, so if we repeat them they will be always available
-#I add it on test_ds for consistency, but it won't make a difference because we only evaluate once on it
-AUTOTUNE = tf.data.AUTOTUNE
-train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat()
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat() 
-test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE).repeat()
+# Batch
+train_ds = train_ds.batch(BATCH_SIZE)
+val_ds = val_ds.batch(BATCH_SIZE)
+test_ds = test_ds.batch(BATCH_SIZE)
 
-
-roses = list(data_dir.glob('roses/*.jpg'))
-
-daisy = list(data_dir.glob('daisy/*.jpg'))
-
-dandelion = list(data_dir.glob('dandelion/*.jpg'))
-
-sunflowers = list(data_dir.glob('sunflowers/*.jpg'))
-
-tulips = list(data_dir.glob('tulips/*.jpg'))
+# Performance
+train_ds = train_ds.cache().prefetch(tf.data.AUTOTUNE)
+val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
+test_ds = test_ds.cache().prefetch(tf.data.AUTOTUNE)
